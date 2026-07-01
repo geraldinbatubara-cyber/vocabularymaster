@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import time
 import random
 from pathlib import Path
@@ -8,7 +9,7 @@ import pandas as pd
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 
-from utils.game_logic import TIME_LIMIT_SECONDS, score_answer, winner_label
+from utils.game_logic import TIME_LIMIT_SECONDS, score_answer
 from utils.question_generator import build_battle_questions, load_vocabulary, normalize_vocabulary
 
 
@@ -130,6 +131,52 @@ def submit_answer(answer: str | None) -> None:
     battle["finished"] = battle["current_round"] >= battle["total_rounds"]
 
 
+def render_final_result(player_scores: dict[str, int]) -> None:
+    sorted_scores = sorted(player_scores.items(), key=lambda item: item[1], reverse=True)
+    if len(sorted_scores) >= 2 and sorted_scores[0][1] == sorted_scores[1][1]:
+        st.info("Hasil seri")
+        tie_cols = st.columns(len(sorted_scores))
+        for col, (player, score) in zip(tie_cols, sorted_scores):
+            with col:
+                st.markdown(
+                    f"""
+                    <div style="background:#f3f4f6;border:1px solid #d1d5db;border-radius:8px;padding:18px;">
+                        <div style="color:#374151;font-size:14px;font-weight:700;">SERI</div>
+                        <div style="color:#111827;font-size:24px;font-weight:800;">{html.escape(player)}</div>
+                        <div style="color:#374151;font-size:18px;font-weight:700;">{score} poin</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+        return
+
+    winner, winner_score = sorted_scores[0]
+    loser, loser_score = sorted_scores[-1]
+    result_cols = st.columns(2)
+    with result_cols[0]:
+        st.markdown(
+            f"""
+            <div style="background:#dcfce7;border:2px solid #16a34a;border-radius:8px;padding:20px;box-shadow:0 0 0 3px rgba(22,163,74,0.12);">
+                <div style="color:#166534;font-size:14px;font-weight:800;">PEMENANG</div>
+                <div style="color:#14532d;font-size:30px;font-weight:900;">{html.escape(winner)}</div>
+                <div style="color:#166534;font-size:22px;font-weight:800;">{winner_score} poin</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with result_cols[1]:
+        st.markdown(
+            f"""
+            <div style="background:#e5e7eb;border:1px solid #9ca3af;border-radius:8px;padding:20px;opacity:0.88;">
+                <div style="color:#4b5563;font-size:14px;font-weight:700;">KALAH</div>
+                <div style="color:#374151;font-size:26px;font-weight:800;">{html.escape(loser)}</div>
+                <div style="color:#4b5563;font-size:20px;font-weight:700;">{loser_score} poin</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
 st.title("Vocabulary Master")
 st.caption("Battle vocabulary 2 pemain: 20 soal bergantian, timer 10 detik, dan 6 soal terakhir sebagai bonus round.")
 
@@ -189,8 +236,7 @@ else:
             st.caption(battle["last_feedback"][player])
 
     if battle["finished"]:
-        winner = winner_label(battle["scores"])
-        st.success(f"Pemenang: {winner}")
+        render_final_result(battle["scores"])
         answers = pd.DataFrame(battle["answers"])
 
         st.subheader("Review Battle")
