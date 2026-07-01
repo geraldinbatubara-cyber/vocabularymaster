@@ -7,7 +7,10 @@ Aplikasi Streamlit untuk membantu belajar vocabulary bahasa Inggris melalui batt
 - Battle 2 pemain secara bergiliran
 - Level Beginner, Intermediate, Advanced, dan Mixed
 - Mode soal: Meaning Match, Reverse Meaning, Synonym, Antonym, dan Fill the Blank
-- Skor otomatis dengan bonus cepat dan bonus streak
+- Pemain pertama dipilih acak saat battle dimulai
+- Total 20 soal dengan timer 10 detik per soal
+- Skor otomatis berdasarkan ketepatan, kecepatan, dan streak
+- Enam soal terakhir menjadi bonus round dengan tingkat kesulitan dan nilai lebih tinggi
 - Review jawaban setelah battle selesai
 - Bank vocabulary awal dalam `data/vocabulary.csv`
 

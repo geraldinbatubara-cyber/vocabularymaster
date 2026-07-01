@@ -14,6 +14,11 @@ QUESTION_TYPES = {
     "Fill the Blank": "Lengkapi kalimat dengan vocabulary yang tepat.",
 }
 
+NORMAL_QUESTION_TYPES = ["Meaning Match", "Reverse Meaning", "Fill the Blank"]
+BONUS_QUESTION_TYPES = ["Synonym Duel", "Antonym Duel", "Fill the Blank"]
+NORMAL_QUESTION_COUNT = 14
+TOTAL_QUESTION_COUNT = 20
+
 
 def load_vocabulary(path: str | Path) -> pd.DataFrame:
     vocab = pd.read_csv(path)
@@ -24,21 +29,54 @@ def load_vocabulary(path: str | Path) -> pd.DataFrame:
     return vocab.dropna(subset=list(required)).reset_index(drop=True)
 
 
-def build_battle_questions(vocab: pd.DataFrame, level: str, total_rounds: int, seed: int | None = None) -> list[dict]:
+def build_battle_questions(vocab: pd.DataFrame, level: str, seed: int | None = None) -> list[dict]:
     rng = random.Random(seed)
-    pool = vocab if level == "Mixed" else vocab[vocab["level"] == level]
-    if pool.empty:
-        pool = vocab
+    normal_pool = _level_pool(vocab, level)
+    bonus_pool = _bonus_pool(vocab, level)
 
-    rows = pool.sample(n=min(total_rounds, len(pool)), random_state=seed).to_dict("records")
+    normal_rows = _sample_rows(normal_pool, NORMAL_QUESTION_COUNT, seed)
+    bonus_rows = _sample_rows(bonus_pool, TOTAL_QUESTION_COUNT - NORMAL_QUESTION_COUNT, None if seed is None else seed + 1)
+
     questions = []
-    for round_index, row in enumerate(rows, start=1):
-        question_type = rng.choice(list(QUESTION_TYPES))
-        questions.append(_make_question(row, vocab, question_type, round_index, rng))
+    for question_index, row in enumerate(normal_rows, start=1):
+        question_type = rng.choice(NORMAL_QUESTION_TYPES)
+        questions.append(_make_question(row, vocab, question_type, question_index, rng, is_bonus=False))
+
+    for question_index, row in enumerate(bonus_rows, start=NORMAL_QUESTION_COUNT + 1):
+        question_type = rng.choice(BONUS_QUESTION_TYPES)
+        questions.append(_make_question(row, vocab, question_type, question_index, rng, is_bonus=True))
     return questions
 
 
-def _make_question(row: dict, vocab: pd.DataFrame, question_type: str, round_index: int, rng: random.Random) -> dict:
+def _level_pool(vocab: pd.DataFrame, level: str) -> pd.DataFrame:
+    if level == "Mixed":
+        return vocab
+    pool = vocab[vocab["level"] == level]
+    return vocab if pool.empty else pool
+
+
+def _bonus_pool(vocab: pd.DataFrame, level: str) -> pd.DataFrame:
+    if level == "Advanced":
+        return _level_pool(vocab, "Advanced")
+    if level == "Intermediate":
+        pool = vocab[vocab["level"].isin(["Intermediate", "Advanced"])]
+    else:
+        pool = vocab[vocab["level"].isin(["Intermediate", "Advanced"])]
+    return vocab if pool.empty else pool
+
+
+def _sample_rows(pool: pd.DataFrame, count: int, seed: int | None) -> list[dict]:
+    return pool.sample(n=count, replace=len(pool) < count, random_state=seed).to_dict("records")
+
+
+def _make_question(
+    row: dict,
+    vocab: pd.DataFrame,
+    question_type: str,
+    question_index: int,
+    rng: random.Random,
+    is_bonus: bool,
+) -> dict:
     if question_type == "Meaning Match":
         prompt = row["word"]
         correct = row["meaning"]
@@ -61,12 +99,13 @@ def _make_question(row: dict, vocab: pd.DataFrame, question_type: str, round_ind
         options = _options(vocab["word"].tolist(), correct, rng)
 
     return {
-        "round": round_index,
+        "round": question_index,
         "type": question_type,
         "instruction": QUESTION_TYPES[question_type],
         "prompt": prompt,
         "correct": correct,
         "options": options,
+        "is_bonus": is_bonus,
         "word": row["word"],
         "meaning": row["meaning"],
         "example": row["example"],
