@@ -30,7 +30,7 @@ def get_vocabulary() -> pd.DataFrame:
 
 
 def active_vocabulary() -> pd.DataFrame:
-    return st.session_state.get("uploaded_vocabulary", get_vocabulary())
+    return normalize_vocabulary(st.session_state.get("uploaded_vocabulary", get_vocabulary()))
 
 
 def template_csv() -> bytes:
@@ -212,6 +212,7 @@ if "battle" not in st.session_state:
             player_2 = st.text_input("Nama Player 2", value="Player 2")
             st.metric("Total soal", TOTAL_QUESTIONS)
 
+        vocab = normalize_vocabulary(vocab)
         categories = ["All Categories"] + sorted(vocab["category"].dropna().unique().tolist())
         category = st.selectbox("Kategori vocabulary", categories, index=0)
         st.info(f"Bank vocabulary tersedia: {len(vocab)} kata. Soal {BONUS_START_QUESTION}-{TOTAL_QUESTIONS} adalah bonus round.")
