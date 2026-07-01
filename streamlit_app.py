@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+from streamlit_autorefresh import st_autorefresh
 
 from utils.game_logic import TIME_LIMIT_SECONDS, score_answer, winner_label
 from utils.question_generator import build_battle_questions, load_vocabulary
@@ -147,22 +148,25 @@ else:
             reset_battle()
             st.rerun()
     else:
+        st_autorefresh(interval=1000, key="battle_countdown")
         question = battle["questions"][battle["current_round"]]
         active_player_index = (battle["first_player_index"] + battle["current_round"]) % 2
         active_player = players[active_player_index]
         progress = (battle["current_round"] + 1) / battle["total_rounds"]
         seconds_used = time.time() - battle["round_started_at"]
         seconds_left = max(0, TIME_LIMIT_SECONDS - int(seconds_used))
-        is_timeout = seconds_used > TIME_LIMIT_SECONDS
+        is_timeout = seconds_left == 0
 
         st.progress(progress, text=f"Soal {question['round']} dari {battle['total_rounds']}")
         with st.container(border=True):
             phase = "Bonus Round" if question["is_bonus"] else "Normal Round"
             st.caption(f"Gilirannya {active_player} | {phase}")
             timer_cols = st.columns(3)
-            timer_cols[0].metric("Sisa waktu", f"{seconds_left} detik")
+            timer_cols[0].metric("Countdown", f"{seconds_left}")
             timer_cols[1].metric("Nilai dasar", 200 if question["is_bonus"] else 100)
             timer_cols[2].metric("Soal bonus mulai", f"{BONUS_START_QUESTION}/{TOTAL_QUESTIONS}")
+            if is_timeout:
+                st.error("Waktu Habis")
             st.subheader(question["type"])
             st.write(question["instruction"])
             st.markdown(f"### {question['prompt']}")
