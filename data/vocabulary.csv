@@ -1,38 +1,38 @@
-word,meaning,level,synonym,antonym,example
-abandon,meninggalkan,Advanced,leave,keep,They had to abandon the old building.
-accurate,tepat,Intermediate,precise,inaccurate,The report gave an accurate number.
-achieve,mencapai,Intermediate,accomplish,fail,She worked hard to achieve her goal.
-ancient,kuno,Intermediate,old,modern,The museum displays ancient tools.
-brave,berani,Beginner,courageous,cowardly,The brave student spoke first.
-brief,singkat,Intermediate,short,long,Please give a brief answer.
-calm,tenang,Beginner,peaceful,nervous,He stayed calm during the test.
-careful,hati-hati,Beginner,cautious,careless,Be careful when crossing the street.
-challenge,tantangan,Intermediate,test,ease,This game is a fun challenge.
-common,umum,Beginner,usual,rare,It is common to drink tea here.
-confident,percaya diri,Intermediate,sure,uncertain,She felt confident before the debate.
-curious,penasaran,Intermediate,interested,indifferent,The curious child asked many questions.
-damage,kerusakan,Intermediate,harm,repair,The storm caused serious damage.
-decide,memutuskan,Beginner,choose,hesitate,They will decide after lunch.
-discover,menemukan,Intermediate,find,miss,Scientists discover new facts every year.
-effort,usaha,Intermediate,attempt,laziness,Learning words takes effort.
-enough,cukup,Beginner,sufficient,lacking,We have enough chairs for everyone.
-explain,menjelaskan,Beginner,clarify,confuse,Can you explain this word?
-familiar,akrab,Intermediate,known,strange,This song sounds familiar.
-fast,cepat,Beginner,quick,slow,The fast runner won the race.
-generous,dermawan,Intermediate,giving,selfish,Her generous friend shared the food.
-honest,jujur,Beginner,truthful,dishonest,An honest answer is better.
-improve,meningkatkan,Intermediate,enhance,worsen,Practice can improve your vocabulary.
-journey,perjalanan,Beginner,trip,stay,The journey took three hours.
-knowledge,pengetahuan,Intermediate,understanding,ignorance,Reading builds knowledge.
-lazy,malas,Beginner,idle,diligent,The lazy cat slept all day.
-mistake,kesalahan,Beginner,error,accuracy,Everyone can learn from a mistake.
-necessary,perlu,Intermediate,essential,optional,Water is necessary for life.
-ordinary,biasa,Intermediate,normal,special,It was an ordinary morning.
-patient,sabar,Intermediate,tolerant,impatient,Be patient when learning grammar.
-quickly,dengan cepat,Beginner,rapidly,slowly,She answered quickly.
-rare,langka,Intermediate,uncommon,common,That bird is very rare.
-reliable,dapat dipercaya,Advanced,dependable,unreliable,A reliable source gives correct facts.
-simple,sederhana,Beginner,easy,complex,Use a simple sentence.
-struggle,berjuang,Advanced,fight,surrender,Many students struggle with pronunciation.
-useful,berguna,Beginner,helpful,useless,This dictionary is useful.
-wise,bijaksana,Intermediate,sensible,foolish,The wise teacher gave good advice.
+word,meaning,level,synonym,antonym,example,category
+abandon,meninggalkan,Advanced,leave,keep,They had to abandon the old building.,formal
+accurate,tepat,Intermediate,precise,inaccurate,The report gave an accurate number.,academic
+achieve,mencapai,Intermediate,accomplish,fail,She worked hard to achieve her goal.,academic
+ancient,kuno,Intermediate,old,modern,The museum displays ancient tools.,school
+brave,berani,Beginner,courageous,cowardly,The brave student spoke first.,emotion
+brief,singkat,Intermediate,short,long,Please give a brief answer.,work
+calm,tenang,Beginner,peaceful,nervous,He stayed calm during the test.,emotion
+careful,hati-hati,Beginner,cautious,careless,Be careful when crossing the street.,daily_life
+challenge,tantangan,Intermediate,test,ease,This game is a fun challenge.,school
+common,umum,Beginner,usual,rare,It is common to drink tea here.,daily_life
+confident,percaya diri,Intermediate,sure,uncertain,She felt confident before the debate.,emotion
+curious,penasaran,Intermediate,interested,indifferent,The curious child asked many questions.,school
+damage,kerusakan,Intermediate,harm,repair,The storm caused serious damage.,daily_life
+decide,memutuskan,Beginner,choose,hesitate,They will decide after lunch.,daily_life
+discover,menemukan,Intermediate,find,miss,Scientists discover new facts every year.,academic
+effort,usaha,Intermediate,attempt,laziness,Learning words takes effort.,academic
+enough,cukup,Beginner,sufficient,lacking,We have enough chairs for everyone.,daily_life
+explain,menjelaskan,Beginner,clarify,confuse,Can you explain this word?,school
+familiar,akrab,Intermediate,known,strange,This song sounds familiar.,daily_life
+fast,cepat,Beginner,quick,slow,The fast runner won the race.,daily_life
+generous,dermawan,Intermediate,giving,selfish,Her generous friend shared the food.,emotion
+honest,jujur,Beginner,truthful,dishonest,An honest answer is better.,emotion
+improve,meningkatkan,Intermediate,enhance,worsen,Practice can improve your vocabulary.,academic
+journey,perjalanan,Beginner,trip,stay,The journey took three hours.,travel
+knowledge,pengetahuan,Intermediate,understanding,ignorance,Reading builds knowledge.,academic
+lazy,malas,Beginner,idle,diligent,The lazy cat slept all day.,daily_life
+mistake,kesalahan,Beginner,error,accuracy,Everyone can learn from a mistake.,school
+necessary,perlu,Intermediate,essential,optional,Water is necessary for life.,formal
+ordinary,biasa,Intermediate,normal,special,It was an ordinary morning.,daily_life
+patient,sabar,Intermediate,tolerant,impatient,Be patient when learning grammar.,emotion
+quickly,dengan cepat,Beginner,rapidly,slowly,She answered quickly.,daily_life
+rare,langka,Intermediate,uncommon,common,That bird is very rare.,academic
+reliable,dapat dipercaya,Advanced,dependable,unreliable,A reliable source gives correct facts.,work
+simple,sederhana,Beginner,easy,complex,Use a simple sentence.,school
+struggle,berjuang,Advanced,fight,surrender,Many students struggle with pronunciation.,academic
+useful,berguna,Beginner,helpful,useless,This dictionary is useful.,daily_life
+wise,bijaksana,Intermediate,sensible,foolish,The wise teacher gave good advice.,formal

@@ -22,15 +22,28 @@ TOTAL_QUESTION_COUNT = 20
 
 def load_vocabulary(path: str | Path) -> pd.DataFrame:
     vocab = pd.read_csv(path)
+    return normalize_vocabulary(vocab)
+
+
+def normalize_vocabulary(vocab: pd.DataFrame) -> pd.DataFrame:
     required = {"word", "meaning", "level", "synonym", "antonym", "example"}
     missing = required.difference(vocab.columns)
     if missing:
         raise ValueError(f"Kolom vocabulary belum lengkap: {', '.join(sorted(missing))}")
+    if "category" not in vocab.columns:
+        vocab = vocab.assign(category="general")
+    vocab["category"] = vocab["category"].fillna("general").astype(str).str.strip().replace("", "general")
     return vocab.dropna(subset=list(required)).reset_index(drop=True)
 
 
-def build_battle_questions(vocab: pd.DataFrame, level: str, seed: int | None = None) -> list[dict]:
+def build_battle_questions(
+    vocab: pd.DataFrame,
+    level: str,
+    category: str = "All Categories",
+    seed: int | None = None,
+) -> list[dict]:
     rng = random.Random(seed)
+    vocab = _category_pool(vocab, category)
     normal_pool = _level_pool(vocab, level)
     bonus_pool = _bonus_pool(vocab, level)
 
@@ -46,6 +59,13 @@ def build_battle_questions(vocab: pd.DataFrame, level: str, seed: int | None = N
         question_type = rng.choice(BONUS_QUESTION_TYPES)
         questions.append(_make_question(row, vocab, question_type, question_index, rng, is_bonus=True))
     return questions
+
+
+def _category_pool(vocab: pd.DataFrame, category: str) -> pd.DataFrame:
+    if category == "All Categories" or "category" not in vocab.columns:
+        return vocab
+    pool = vocab[vocab["category"] == category]
+    return vocab if pool.empty else pool
 
 
 def _level_pool(vocab: pd.DataFrame, level: str) -> pd.DataFrame:

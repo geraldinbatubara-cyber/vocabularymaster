@@ -9,7 +9,7 @@ import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 
 from utils.game_logic import TIME_LIMIT_SECONDS, score_answer, winner_label
-from utils.question_generator import build_battle_questions, load_vocabulary
+from utils.question_generator import build_battle_questions, load_vocabulary, normalize_vocabulary
 
 
 APP_DIR = Path(__file__).parent
@@ -17,6 +17,7 @@ VOCAB_PATH = APP_DIR / "data" / "vocabulary.csv"
 LEVELS = ["Beginner", "Intermediate", "Advanced", "Mixed"]
 TOTAL_QUESTIONS = 20
 BONUS_START_QUESTION = 15
+TEMPLATE_COLUMNS = ["word", "meaning", "level", "synonym", "antonym", "example", "category"]
 
 
 st.set_page_config(page_title="Vocabulary Master", layout="wide")
@@ -27,13 +28,54 @@ def get_vocabulary() -> pd.DataFrame:
     return load_vocabulary(VOCAB_PATH)
 
 
-def initialize_battle(player_1: str, player_2: str, level: str) -> None:
+def active_vocabulary() -> pd.DataFrame:
+    return st.session_state.get("uploaded_vocabulary", get_vocabulary())
+
+
+def template_csv() -> bytes:
+    template = pd.DataFrame(
+        [
+            {
+                "word": "borrow",
+                "meaning": "meminjam",
+                "level": "Beginner",
+                "synonym": "take",
+                "antonym": "lend",
+                "example": "Can I borrow your pencil?",
+                "category": "daily_life",
+            },
+            {
+                "word": "consider",
+                "meaning": "mempertimbangkan",
+                "level": "Intermediate",
+                "synonym": "think",
+                "antonym": "ignore",
+                "example": "Please consider the second option.",
+                "category": "work",
+            },
+            {
+                "word": "resilient",
+                "meaning": "tangguh",
+                "level": "Advanced",
+                "synonym": "strong",
+                "antonym": "fragile",
+                "example": "A resilient learner keeps practicing.",
+                "category": "academic",
+            },
+        ],
+        columns=TEMPLATE_COLUMNS,
+    )
+    return template.to_csv(index=False).encode("utf-8")
+
+
+def initialize_battle(player_1: str, player_2: str, level: str, category: str) -> None:
     seed = int(time.time())
-    questions = build_battle_questions(get_vocabulary(), level, seed=seed)
+    questions = build_battle_questions(active_vocabulary(), level, category=category, seed=seed)
     first_player_index = random.Random(seed).choice([0, 1])
     st.session_state.battle = {
         "players": [player_1, player_2],
         "level": level,
+        "category": category,
         "total_rounds": len(questions),
         "questions": questions,
         "current_round": 0,
@@ -92,7 +134,27 @@ st.title("Vocabulary Master")
 st.caption("Battle vocabulary 2 pemain: 20 soal bergantian, timer 10 detik, dan 6 soal terakhir sebagai bonus round.")
 
 if "battle" not in st.session_state:
-    vocab = get_vocabulary()
+    vocab = active_vocabulary()
+    with st.container(border=True):
+        st.subheader("Kelola Bank Vocabulary")
+        upload = st.file_uploader("Upload CSV bank vocabulary", type=["csv"])
+        if upload is not None:
+            try:
+                vocab = normalize_vocabulary(pd.read_csv(upload))
+                st.session_state.uploaded_vocabulary = vocab
+                st.success(f"Bank vocabulary aktif diganti dari file upload: {len(vocab)} kata.")
+                st.dataframe(vocab.head(10), use_container_width=True, hide_index=True)
+            except Exception as exc:
+                st.error(f"CSV belum valid: {exc}")
+
+        st.download_button(
+            "Unduh Template CSV Bank Vocabulary",
+            data=template_csv(),
+            file_name="template_bank_vocabulary.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+
     with st.container(border=True):
         st.subheader("Buat Battle")
         col_a, col_b = st.columns(2)
@@ -103,12 +165,14 @@ if "battle" not in st.session_state:
             player_2 = st.text_input("Nama Player 2", value="Player 2")
             st.metric("Total soal", TOTAL_QUESTIONS)
 
+        categories = ["All Categories"] + sorted(vocab["category"].dropna().unique().tolist())
+        category = st.selectbox("Kategori vocabulary", categories, index=0)
         st.info(f"Bank vocabulary tersedia: {len(vocab)} kata. Soal {BONUS_START_QUESTION}-{TOTAL_QUESTIONS} adalah bonus round.")
         if st.button("Mulai Battle", type="primary", use_container_width=True):
             if player_1.strip().casefold() == player_2.strip().casefold():
                 st.error("Nama kedua pemain harus berbeda.")
             else:
-                initialize_battle(player_1.strip(), player_2.strip(), level)
+                initialize_battle(player_1.strip(), player_2.strip(), level, category)
                 st.rerun()
 else:
     battle = st.session_state.battle
