@@ -77,104 +77,90 @@ def render_landing_page() -> None:
     st.markdown(
         """
         <style>
-        .vm-hero {
-            background:linear-gradient(135deg,#d9f99d 0%,#bae6fd 42%,#fecdd3 100%);
-            border-radius:8px;
-            padding:42px 34px;
-            color:#0f172a;
-            min-height:440px;
-            position:relative;
-            overflow:hidden;
-            border:1px solid rgba(15,23,42,0.08);
-        }
-        .vm-hero h1 {
-            font-size:64px;
-            line-height:0.95;
-            margin:0;
-            letter-spacing:0;
-            font-weight:900;
-            max-width:760px;
-        }
-        .vm-hero p {
-            font-size:21px;
-            line-height:1.45;
-            max-width:650px;
-            margin:18px 0 0;
-            color:#334155;
-            font-weight:700;
-        }
-        .vm-word-board {
-            display:grid;
-            grid-template-columns:repeat(4,minmax(0,1fr));
-            gap:10px;
-            max-width:620px;
-            margin-top:28px;
-        }
-        .vm-tile {
-            border-radius:8px;
-            padding:14px 12px;
-            text-align:center;
-            font-weight:900;
-            color:#111827;
-            box-shadow:0 12px 26px rgba(15,23,42,0.10);
-            border:2px solid rgba(255,255,255,0.72);
-        }
-        .vm-mini-card {
-            border-radius:8px;
-            padding:18px;
-            min-height:132px;
-            border:1px solid rgba(15,23,42,0.08);
-            box-shadow:0 10px 24px rgba(15,23,42,0.06);
-        }
-        .vm-mini-card strong {
-            display:block;
-            font-size:18px;
-            color:#111827;
-            margin-bottom:8px;
-        }
-        .vm-mini-card span {
-            color:#4b5563;
-            font-size:14px;
-            font-weight:700;
-            line-height:1.35;
-        }
-        .st-key-landing_start button {
-            background:#16a34a !important;
-            color:white !important;
-            border:2px solid #15803d !important;
-            min-height:64px !important;
-            font-size:22px !important;
-            font-weight:900 !important;
-            box-shadow:0 12px 28px rgba(22,163,74,0.24) !important;
-        }
-        .st-key-landing_vocab button {
-            background:#0ea5e9 !important;
-            color:white !important;
-            border:2px solid #0284c7 !important;
-            min-height:64px !important;
-            font-size:18px !important;
-            font-weight:900 !important;
-        }
-        @media (max-width: 760px) {
-            .vm-hero { padding:30px 20px; }
-            .vm-hero h1 { font-size:44px; }
-            .vm-hero p { font-size:17px; }
-            .vm-word-board { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .vm-shell { background:#ffffff; border-radius:8px; padding:22px 8px 0; overflow:hidden; }
+        .vm-nav { display:flex; align-items:center; justify-content:space-between; max-width:1220px; margin:0 auto 52px; padding:0 18px; }
+        .vm-brand { display:flex; align-items:center; gap:10px; color:#0757d9; font-size:24px; font-weight:900; }
+        .vm-brand-mark { width:44px; height:28px; background:#ffb703; border-radius:8px 8px 3px 3px; transform:skew(-16deg); box-shadow:14px 0 0 #ffd166; }
+        .vm-nav-links { display:flex; gap:34px; color:#1f2937; font-weight:800; font-size:16px; }
+        .vm-nav-pill { background:#ffb703; color:#063b7a; border-radius:8px; padding:14px 24px; font-weight:900; box-shadow:0 10px 22px rgba(255,183,3,0.28); }
+        .vm-hero { max-width:1220px; min-height:640px; margin:0 auto; display:grid; grid-template-columns:0.92fr 1.08fr; gap:28px; align-items:center; padding:0 18px 34px; }
+        .vm-copy h1 { color:#0757d9; font-size:58px; line-height:1.02; letter-spacing:0; margin:0; font-weight:900; }
+        .vm-copy h2 { color:#0757d9; font-size:30px; line-height:1.1; margin:18px 0 12px; font-weight:900; }
+        .vm-copy p { color:#4b5563; font-size:19px; line-height:1.55; margin:0; max-width:620px; font-weight:650; }
+        .vm-proof { display:flex; gap:10px; flex-wrap:wrap; margin-top:26px; }
+        .vm-proof span { background:#f3f8ff; color:#0757d9; border:1px solid #dbeafe; border-radius:8px; padding:10px 14px; font-weight:900; }
+        .vm-stage { min-height:520px; position:relative; overflow:hidden; border-radius:72px 0 0 72px; background:linear-gradient(135deg,#35a9ff 0%,#006be6 58%,#0051b8 100%); box-shadow:0 24px 50px rgba(0,92,184,0.24); }
+        .vm-stage:after { content:""; position:absolute; right:-42px; bottom:-70px; width:116%; height:150px; background:#ffb703; transform:rotate(-10deg); }
+        .vm-dotfield { position:absolute; right:34px; top:30px; width:250px; height:160px; background-image:radial-gradient(rgba(255,255,255,0.55) 3px,transparent 4px); background-size:24px 24px; opacity:0.8; }
+        .vm-float { position:absolute; width:72px; height:72px; border-radius:999px; background:#eaf6ff; display:flex; align-items:center; justify-content:center; color:#0877e8; font-size:30px; font-weight:900; box-shadow:0 16px 30px rgba(15,23,42,0.18); }
+        .vm-float.small { width:56px; height:56px; font-size:24px; }
+        .vm-phone { position:absolute; width:210px; min-height:360px; background:#0f172a; border-radius:34px; padding:12px; box-shadow:0 24px 42px rgba(0,0,0,0.28); }
+        .vm-phone.one { left:210px; top:155px; transform:rotate(-2deg); }
+        .vm-phone.two { left:345px; top:102px; transform:rotate(2deg); }
+        .vm-screen { background:#f8fbff; border-radius:25px; min-height:336px; padding:14px; }
+        .vm-screen-top { background:#0ea5e9; border-radius:18px; color:white; padding:14px; font-weight:900; }
+        .vm-score-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+        .vm-score { background:white; border-radius:8px; padding:10px; color:#0f172a; font-size:13px; font-weight:900; }
+        .vm-timer { background:#ffb703; color:#063b7a; border-radius:999px; width:82px; height:82px; margin:16px auto 12px; display:flex; align-items:center; justify-content:center; font-size:38px; font-weight:900; }
+        .vm-answer { background:#e0f2fe; color:#0757d9; border-radius:8px; padding:11px; margin-top:8px; text-align:center; font-weight:900; }
+        .vm-answer.alt { background:#dcfce7; color:#166534; }
+        .vm-answer.hot { background:#ffe4e6; color:#be123c; }
+        .st-key-landing_start button { background:#ffb703 !important; color:#063b7a !important; border:2px solid #f59e0b !important; min-height:58px !important; font-size:20px !important; font-weight:900 !important; border-radius:999px !important; box-shadow:0 14px 24px rgba(255,183,3,0.30) !important; }
+        .st-key-landing_vocab button { background:#ffffff !important; color:#0757d9 !important; border:2px solid #bfdbfe !important; min-height:58px !important; font-size:18px !important; font-weight:900 !important; border-radius:999px !important; }
+        @media (max-width: 900px) {
+            .vm-nav-links { display:none; }
+            .vm-hero { grid-template-columns:1fr; min-height:auto; }
+            .vm-copy h1 { font-size:44px; }
+            .vm-stage { min-height:430px; border-radius:40px; }
+            .vm-phone.one { left:60px; top:120px; }
+            .vm-phone.two { left:190px; top:80px; }
         }
         </style>
-        <section class="vm-hero">
-            <div style="font-size:14px;font-weight:900;color:#0f766e;text-transform:uppercase;margin-bottom:14px;">Playful English Vocabulary Battle</div>
-            <h1>Vocabulary Master</h1>
-            <p>Belajar vocabulary lewat duel cepat, seru, dan penuh strategi. Pilih kategori, jawab sebelum waktu habis, lalu rebut poin bonus di akhir match.</p>
-            <div class="vm-word-board">
-                <div class="vm-tile" style="background:#fef3c7;">brave</div>
-                <div class="vm-tile" style="background:#bfdbfe;">curious</div>
-                <div class="vm-tile" style="background:#bbf7d0;">achieve</div>
-                <div class="vm-tile" style="background:#fecdd3;">resilient</div>
-                <div class="vm-tile" style="background:#ddd6fe;">honest</div>
-                <div class="vm-tile" style="background:#fed7aa;">challenge</div>
-                <div class="vm-tile" style="background:#cffafe;">discover</div>
-                <div class="vm-tile" style="background:#fbcfe8;">wise</div>
+        <section class="vm-shell">
+            <div class="vm-nav">
+                <div class="vm-brand"><span class="vm-brand-mark"></span><span>Vocabulary Master</span></div>
+                <div class="vm-nav-links"><span>Battle</span><span>Vocabulary</span><span>Bonus Round</span><span>Review</span></div>
+                <div class="vm-nav-pill">Play Now</div>
+            </div>
+            <div class="vm-hero">
+                <div class="vm-copy">
+                    <h1>Vocabulary Master</h1>
+                    <h2>#BattleYourWords</h2>
+                    <p>Web app belajar bahasa Inggris dengan duel vocabulary 2 pemain, countdown cepat, bonus round, dan bank soal yang bisa kamu update kapan saja.</p>
+                    <div class="vm-proof">
+                        <span>2 Player Battle</span>
+                        <span>10s Countdown</span>
+                        <span>CSV Vocabulary</span>
+                    </div>
+                </div>
+                <div class="vm-stage">
+                    <div class="vm-dotfield"></div>
+                    <div class="vm-float" style="left:70px;top:125px;">A+</div>
+                    <div class="vm-float small" style="left:178px;top:190px;">10</div>
+                    <div class="vm-float small" style="right:205px;top:105px;">VS</div>
+                    <div class="vm-float" style="right:110px;top:190px;">TOP</div>
+                    <div class="vm-float small" style="right:55px;top:320px;">CSV</div>
+                    <div class="vm-phone one">
+                        <div class="vm-screen">
+                            <div class="vm-screen-top">Player A<br><span style="font-size:12px;">Streak 3</span></div>
+                            <div class="vm-score-row"><div class="vm-score">Score<br>450</div><div class="vm-score">Bonus<br>120</div></div>
+                            <div class="vm-timer">7</div>
+                            <div class="vm-answer">curious</div>
+                            <div class="vm-answer alt">honest</div>
+                            <div class="vm-answer hot">rare</div>
+                        </div>
+                    </div>
+                    <div class="vm-phone two">
+                        <div class="vm-screen">
+                            <div class="vm-screen-top">Vocabulary Battle<br><span style="font-size:12px;">Bonus Round</span></div>
+                            <div class="vm-score-row"><div class="vm-score">Ayu<br>680</div><div class="vm-score">Bima<br>640</div></div>
+                            <div class="vm-timer">3</div>
+                            <div class="vm-answer">resilient</div>
+                            <div class="vm-answer alt">achieve</div>
+                            <div class="vm-answer hot">damage</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
         """,
