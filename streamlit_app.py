@@ -212,18 +212,12 @@ def render_timer_card(seconds_left: int, is_bonus: bool) -> None:
     )
 
 
-def render_side_info(label: str, value: str | int, tone: str) -> None:
-    palettes = {
-        "base": ("#f0f9ff", "#0284c7", "#0c4a6e"),
-        "normal": ("#f3f4f6", "#6b7280", "#111827"),
-        "bonus": ("#fffbeb", "#d97706", "#78350f"),
-    }
-    background, border, text_color = palettes[tone]
+def render_side_info(label: str, value: str | int) -> None:
     st.markdown(
         f"""
-        <div style="height:100%;min-height:148px;background:{background};border:2px solid {border};border-radius:8px;padding:18px 14px;text-align:center;display:flex;flex-direction:column;justify-content:center;">
-            <div style="color:{border};font-size:12px;font-weight:900;text-transform:uppercase;">{html.escape(label)}</div>
-            <div style="color:{text_color};font-size:34px;font-weight:900;line-height:1;margin-top:10px;">{html.escape(str(value))}</div>
+        <div style="height:100%;min-height:148px;padding:18px 10px;text-align:center;display:flex;flex-direction:column;justify-content:center;">
+            <div style="color:#9ca3af;font-size:12px;font-weight:900;text-transform:uppercase;">{html.escape(label)}</div>
+            <div style="color:#374151;font-size:30px;font-weight:900;line-height:1;margin-top:10px;">{html.escape(str(value))}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -508,19 +502,19 @@ else:
             is_timeout = seconds_left == 0
             spotlight_cols = st.columns([0.9, 1.35, 0.9])
             with spotlight_cols[0]:
-                render_side_info("Nilai dasar", 200 if question["is_bonus"] else 100, "base")
+                render_side_info("Nilai dasar", 200 if question["is_bonus"] else 100)
             with spotlight_cols[1]:
                 render_timer_card(seconds_left, question["is_bonus"])
             with spotlight_cols[2]:
-                render_side_info("Jenis soal", "Bonus" if question["is_bonus"] else "Biasa", "bonus" if question["is_bonus"] else "normal")
+                render_side_info("Jenis soal", "Bonus" if question["is_bonus"] else "Biasa")
             if is_timeout:
                 st.error("Waktu Habis")
             st.markdown(
                 f"""
-                <div style="margin:8px 0 10px;">
+                <div style="margin:8px 0 10px;text-align:center;">
                     <div style="color:#4b5563;font-size:14px;font-weight:900;text-transform:uppercase;">{html.escape(question['type'])}</div>
                     <div style="color:#6b7280;font-size:14px;font-weight:700;">{html.escape(question['instruction'])}</div>
-                    <div style="color:#111827;font-size:26px;font-weight:900;line-height:1.2;margin-top:6px;">{html.escape(question['prompt'])}</div>
+                    <div style="color:#111827;font-size:28px;font-weight:900;line-height:1.2;margin-top:6px;">{html.escape(question['prompt'])}</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
