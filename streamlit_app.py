@@ -179,14 +179,42 @@ def render_timer_card(seconds_left: int, is_bonus: bool) -> None:
     phase = "Bonus Round" if is_bonus else "Normal Round"
     st.markdown(
         f"""
-        <div style="background:{background};border:1px solid {color};border-radius:8px;padding:18px;text-align:center;">
-            <div style="color:{color};font-size:13px;font-weight:800;text-transform:uppercase;">{html.escape(label)} | {phase}</div>
-            <div style="color:{color};font-size:54px;font-weight:900;line-height:1;">{seconds_left}</div>
-            <div style="color:{color};font-size:14px;font-weight:800;">detik</div>
+        <div style="display:flex;justify-content:center;margin:8px 0 18px;">
+            <div style="width:min(420px,100%);background:{background};border:2px solid {color};border-radius:8px;padding:26px;text-align:center;box-shadow:0 16px 34px rgba(17,24,39,0.10);">
+                <div style="color:{color};font-size:14px;font-weight:900;text-transform:uppercase;">Countdown</div>
+                <div style="color:{color};font-size:104px;font-weight:900;line-height:0.95;">{seconds_left}</div>
+                <div style="color:{color};font-size:16px;font-weight:900;">detik</div>
+                <div style="color:{color};font-size:13px;font-weight:800;margin-top:8px;">{html.escape(label)} | {phase}</div>
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+
+
+def render_answer_cards(options: list[str], is_timeout: bool) -> None:
+    colors = [
+        ("#eff6ff", "#2563eb", "#1e3a8a"),
+        ("#f0fdf4", "#16a34a", "#14532d"),
+        ("#fff7ed", "#ea580c", "#7c2d12"),
+        ("#fdf2f8", "#db2777", "#831843"),
+    ]
+    option_cols = st.columns(4)
+    for index, option in enumerate(options):
+        background, border, text_color = colors[index % len(colors)]
+        with option_cols[index]:
+            st.markdown(
+                f"""
+                <div style="min-height:138px;background:{background};border:2px solid {border};border-radius:8px;padding:16px;text-align:center;display:flex;flex-direction:column;justify-content:center;">
+                    <div style="color:{border};font-size:12px;font-weight:900;text-transform:uppercase;">Pilihan {index + 1}</div>
+                    <div style="color:{text_color};font-size:21px;font-weight:900;line-height:1.2;margin-top:8px;word-break:break-word;">{html.escape(option)}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            if st.button("Pilih", key=f"answer_{index}_{option}", use_container_width=True, disabled=is_timeout):
+                submit_answer(option)
+                st.rerun()
 
 
 def answer_seconds(value: str) -> float:
@@ -359,17 +387,16 @@ else:
         with st.container(border=True):
             phase = "Bonus Round" if question["is_bonus"] else "Normal Round"
             st.caption(f"Gilirannya {active_player} | {phase}")
-            timer_cols = st.columns([1.2, 1, 1])
-            with timer_cols[0]:
-                render_timer_card(seconds_left, question["is_bonus"])
-            timer_cols[1].metric("Nilai dasar", 200 if question["is_bonus"] else 100)
-            timer_cols[2].metric("Soal bonus mulai", f"{BONUS_START_QUESTION}/{TOTAL_QUESTIONS}")
+            render_timer_card(seconds_left, question["is_bonus"])
+            info_cols = st.columns(2)
+            info_cols[0].metric("Nilai dasar", 200 if question["is_bonus"] else 100)
+            info_cols[1].metric("Soal bonus mulai", f"{BONUS_START_QUESTION}/{TOTAL_QUESTIONS}")
             if is_timeout:
                 st.error("Waktu Habis")
             st.subheader(question["type"])
             st.write(question["instruction"])
             st.markdown(f"### {question['prompt']}")
-            answer = st.radio("Pilih jawaban", question["options"], index=None, disabled=is_timeout)
+            render_answer_cards(question["options"], is_timeout)
 
             col_submit, col_reset = st.columns([3, 1])
             with col_submit:
@@ -377,9 +404,6 @@ else:
                     if st.button("Waktu Habis - Lanjut", type="primary", use_container_width=True):
                         submit_answer(None)
                         st.rerun()
-                elif st.button("Kunci Jawaban", type="primary", use_container_width=True, disabled=answer is None):
-                    submit_answer(answer)
-                    st.rerun()
             with col_reset:
                 if st.button("Reset", use_container_width=True):
                     reset_battle()
