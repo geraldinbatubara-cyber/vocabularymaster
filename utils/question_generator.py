@@ -16,8 +16,7 @@ QUESTION_TYPES = {
 
 NORMAL_QUESTION_TYPES = ["Meaning Match", "Reverse Meaning", "Fill the Blank"]
 BONUS_QUESTION_TYPES = ["Synonym Duel", "Antonym Duel", "Fill the Blank"]
-NORMAL_QUESTION_COUNT = 14
-TOTAL_QUESTION_COUNT = 20
+BONUS_QUESTION_RATIO = 0.3
 
 
 def load_vocabulary(path: str | Path) -> pd.DataFrame:
@@ -40,24 +39,28 @@ def build_battle_questions(
     vocab: pd.DataFrame,
     level: str,
     category: str = "All Categories",
+    total_questions: int = 20,
     seed: int | None = None,
 ) -> list[dict]:
     rng = random.Random(seed)
+    option_vocab = vocab
     vocab = _category_pool(vocab, category)
     normal_pool = _level_pool(vocab, level)
     bonus_pool = _bonus_pool(vocab, level)
+    bonus_count = max(1, round(total_questions * BONUS_QUESTION_RATIO))
+    normal_count = total_questions - bonus_count
 
-    normal_rows = _sample_rows(normal_pool, NORMAL_QUESTION_COUNT, seed)
-    bonus_rows = _sample_rows(bonus_pool, TOTAL_QUESTION_COUNT - NORMAL_QUESTION_COUNT, None if seed is None else seed + 1)
+    normal_rows = _sample_rows(normal_pool, normal_count, seed)
+    bonus_rows = _sample_rows(bonus_pool, bonus_count, None if seed is None else seed + 1)
 
     questions = []
     for question_index, row in enumerate(normal_rows, start=1):
         question_type = rng.choice(NORMAL_QUESTION_TYPES)
-        questions.append(_make_question(row, vocab, question_type, question_index, rng, is_bonus=False))
+        questions.append(_make_question(row, option_vocab, question_type, question_index, rng, is_bonus=False))
 
-    for question_index, row in enumerate(bonus_rows, start=NORMAL_QUESTION_COUNT + 1):
+    for question_index, row in enumerate(bonus_rows, start=normal_count + 1):
         question_type = rng.choice(BONUS_QUESTION_TYPES)
-        questions.append(_make_question(row, vocab, question_type, question_index, rng, is_bonus=True))
+        questions.append(_make_question(row, option_vocab, question_type, question_index, rng, is_bonus=True))
     return questions
 
 

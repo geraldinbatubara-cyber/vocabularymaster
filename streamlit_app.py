@@ -16,8 +16,8 @@ from utils.question_generator import build_battle_questions, load_vocabulary, no
 APP_DIR = Path(__file__).parent
 VOCAB_PATH = APP_DIR / "data" / "vocabulary.csv"
 LEVELS = ["Beginner", "Intermediate", "Advanced", "Mixed"]
-TOTAL_QUESTIONS = 20
-BONUS_START_QUESTION = 15
+QUESTION_OPTIONS = [20, 30, 40, 50]
+BONUS_QUESTION_RATIO = 0.3
 TEMPLATE_COLUMNS = ["word", "meaning", "level", "synonym", "antonym", "example", "category"]
 
 
@@ -69,14 +69,27 @@ def template_csv() -> bytes:
     return template.to_csv(index=False).encode("utf-8")
 
 
-def initialize_battle(player_1: str, player_2: str, level: str, category: str) -> None:
+def bonus_start_question(total_questions: int) -> int:
+    bonus_count = max(1, round(total_questions * BONUS_QUESTION_RATIO))
+    return total_questions - bonus_count + 1
+
+
+def initialize_battle(player_1: str, player_2: str, level: str, category: str, total_questions: int) -> None:
     seed = int(time.time())
-    questions = build_battle_questions(active_vocabulary(), level, category=category, seed=seed)
+    questions = build_battle_questions(
+        active_vocabulary(),
+        level,
+        category=category,
+        total_questions=total_questions,
+        seed=seed,
+    )
     first_player_index = random.Random(seed).choice([0, 1])
     st.session_state.battle = {
         "players": [player_1, player_2],
         "level": level,
         "category": category,
+        "selected_total_questions": total_questions,
+        "bonus_start_question": bonus_start_question(total_questions),
         "total_rounds": len(questions),
         "questions": questions,
         "current_round": 0,
@@ -87,7 +100,7 @@ def initialize_battle(player_1: str, player_2: str, level: str, category: str) -
         "last_feedback": {player_1: "Belum menjawab", player_2: "Belum menjawab"},
         "answers": [],
         "round_started_at": time.time(),
-        "round_ready": False,
+        "battle_started": False,
         "finished": False,
     }
 
@@ -129,12 +142,13 @@ def submit_answer(answer: str | None) -> None:
 
     battle["current_round"] += 1
     battle["finished"] = battle["current_round"] >= battle["total_rounds"]
-    battle["round_ready"] = False
+    if not battle["finished"]:
+        battle["round_started_at"] = time.time()
 
 
-def start_round() -> None:
+def start_battle_clock() -> None:
     st.session_state.battle["round_started_at"] = time.time()
-    st.session_state.battle["round_ready"] = True
+    st.session_state.battle["battle_started"] = True
 
 
 def render_player_card(player: str, battle: dict, is_active: bool = False) -> None:
@@ -205,7 +219,7 @@ def render_start_gate(active_player: str, question: dict) -> None:
         <div style="text-align:center;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:28px;margin:14px 0;">
             <div style="color:#4b5563;font-size:13px;font-weight:900;text-transform:uppercase;">{phase}</div>
             <div style="color:#111827;font-size:28px;font-weight:900;margin-top:6px;">Giliran {html.escape(active_player)}</div>
-            <div style="color:#6b7280;font-size:15px;font-weight:700;margin-top:8px;">Tekan START untuk mulai countdown 10 detik.</div>
+            <div style="color:#6b7280;font-size:15px;font-weight:700;margin-top:8px;">Tekan START sekali untuk mulai match. Setelah itu giliran berjalan otomatis.</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -229,7 +243,7 @@ def render_start_gate(active_player: str, question: dict) -> None:
     left, center, right = st.columns([1, 1.2, 1])
     with center:
         if st.button("START", key="start_round", use_container_width=True):
-            start_round()
+            start_battle_clock()
             st.rerun()
 
 
@@ -354,7 +368,7 @@ def render_final_result(player_scores: dict[str, int]) -> None:
 
 
 st.title("Vocabulary Master")
-st.caption("Battle vocabulary 2 pemain: 20 soal bergantian, timer 10 detik, dan 6 soal terakhir sebagai bonus round.")
+st.caption("Battle vocabulary 2 pemain: pilih 20-50 soal, timer 10 detik, dan 30% soal terakhir sebagai bonus round.")
 
 if "battle" not in st.session_state:
     vocab = active_vocabulary()
@@ -386,18 +400,37 @@ if "battle" not in st.session_state:
             level = st.selectbox("Level", LEVELS, index=0)
         with col_b:
             player_2 = st.text_input("Nama Player 2", value="Player 2")
-            st.metric("Total soal", TOTAL_QUESTIONS)
+            total_questions = st.selectbox("Jumlah soal", QUESTION_OPTIONS, index=0)
 
         vocab = normalize_vocabulary(vocab)
         categories = ["All Categories"] + sorted(vocab["category"].dropna().unique().tolist())
         category = st.selectbox("Kategori vocabulary", categories, index=0)
-        st.info(f"Bank vocabulary tersedia: {len(vocab)} kata. Soal {BONUS_START_QUESTION}-{TOTAL_QUESTIONS} adalah bonus round.")
-        if st.button("Mulai Battle", type="primary", use_container_width=True):
-            if player_1.strip().casefold() == player_2.strip().casefold():
-                st.error("Nama kedua pemain harus berbeda.")
-            else:
-                initialize_battle(player_1.strip(), player_2.strip(), level, category)
-                st.rerun()
+        bonus_start = bonus_start_question(total_questions)
+        st.info(f"Bank vocabulary tersedia: {len(vocab)} kata. Soal {bonus_start}-{total_questions} adalah bonus round.")
+        st.markdown(
+            """
+            <style>
+            .st-key-create_battle button {
+                background:#16a34a !important;
+                border:2px solid #15803d !important;
+                color:white !important;
+                font-size:22px !important;
+                font-weight:900 !important;
+                min-height:64px !important;
+                box-shadow:0 12px 28px rgba(22,163,74,0.20) !important;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+        left, center, right = st.columns([1, 1.35, 1])
+        with center:
+            if st.button("Mulai Battle", key="create_battle", use_container_width=True):
+                if player_1.strip().casefold() == player_2.strip().casefold():
+                    st.error("Nama kedua pemain harus berbeda.")
+                else:
+                    initialize_battle(player_1.strip(), player_2.strip(), level, category, total_questions)
+                    st.rerun()
 else:
     battle = st.session_state.battle
     players = battle["players"]
@@ -442,7 +475,7 @@ else:
         with st.container(border=True):
             phase = "Bonus Round" if question["is_bonus"] else "Normal Round"
             st.caption(f"Gilirannya {active_player} | {phase}")
-            if not battle.get("round_ready", False):
+            if not battle.get("battle_started", False):
                 render_start_gate(active_player, question)
                 center_reset = st.columns([1.2, 1, 1.2])[1]
                 with center_reset:
@@ -458,7 +491,7 @@ else:
             render_timer_card(seconds_left, question["is_bonus"])
             info_cols = st.columns(2)
             info_cols[0].metric("Nilai dasar", 200 if question["is_bonus"] else 100)
-            info_cols[1].metric("Soal bonus mulai", f"{BONUS_START_QUESTION}/{TOTAL_QUESTIONS}")
+            info_cols[1].metric("Soal bonus mulai", f"{battle['bonus_start_question']}/{battle['total_rounds']}")
             if is_timeout:
                 st.error("Waktu Habis")
             st.subheader(question["type"])

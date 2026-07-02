@@ -11,10 +11,11 @@ Aplikasi Streamlit untuk membantu belajar vocabulary bahasa Inggris melalui batt
 - Upload CSV untuk mengganti bank vocabulary sewaktu-waktu
 - Download template CSV bank vocabulary
 - Pemain pertama dipilih acak saat battle dimulai
-- Total 20 soal dengan countdown 10 detik per soal
+- Pilihan jumlah soal 20, 30, 40, atau 50
+- Countdown 10 detik per soal
 - Countdown berjalan otomatis dari 10 sampai 0 dan menampilkan status Waktu Habis
 - Skor otomatis berdasarkan ketepatan, kecepatan, dan streak
-- Enam soal terakhir menjadi bonus round dengan tingkat kesulitan dan nilai lebih tinggi
+- 30% soal terakhir menjadi bonus round dengan tingkat kesulitan dan nilai lebih tinggi
 - Review jawaban setelah battle selesai
 - Bank vocabulary awal dalam `data/vocabulary.csv`
 
