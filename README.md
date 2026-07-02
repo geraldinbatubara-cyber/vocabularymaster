@@ -5,6 +5,7 @@ Aplikasi Streamlit untuk membantu belajar vocabulary bahasa Inggris melalui batt
 ## Fitur MVP
 
 - Battle 2 pemain secara bergiliran
+- Landing page ceria sebelum masuk lobi battle
 - Level Beginner, Intermediate, Advanced, dan Mixed
 - Mode soal: Meaning Match, Reverse Meaning, Synonym, Antonym, dan Fill the Blank
 - Pilihan kategori vocabulary berdasarkan bank soal aktif

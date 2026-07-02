@@ -69,6 +69,149 @@ def template_csv() -> bytes:
     return template.to_csv(index=False).encode("utf-8")
 
 
+def open_lobby() -> None:
+    st.session_state.show_lobby = True
+
+
+def render_landing_page() -> None:
+    st.markdown(
+        """
+        <style>
+        .vm-hero {
+            background:linear-gradient(135deg,#d9f99d 0%,#bae6fd 42%,#fecdd3 100%);
+            border-radius:8px;
+            padding:42px 34px;
+            color:#0f172a;
+            min-height:440px;
+            position:relative;
+            overflow:hidden;
+            border:1px solid rgba(15,23,42,0.08);
+        }
+        .vm-hero h1 {
+            font-size:64px;
+            line-height:0.95;
+            margin:0;
+            letter-spacing:0;
+            font-weight:900;
+            max-width:760px;
+        }
+        .vm-hero p {
+            font-size:21px;
+            line-height:1.45;
+            max-width:650px;
+            margin:18px 0 0;
+            color:#334155;
+            font-weight:700;
+        }
+        .vm-word-board {
+            display:grid;
+            grid-template-columns:repeat(4,minmax(0,1fr));
+            gap:10px;
+            max-width:620px;
+            margin-top:28px;
+        }
+        .vm-tile {
+            border-radius:8px;
+            padding:14px 12px;
+            text-align:center;
+            font-weight:900;
+            color:#111827;
+            box-shadow:0 12px 26px rgba(15,23,42,0.10);
+            border:2px solid rgba(255,255,255,0.72);
+        }
+        .vm-mini-card {
+            border-radius:8px;
+            padding:18px;
+            min-height:132px;
+            border:1px solid rgba(15,23,42,0.08);
+            box-shadow:0 10px 24px rgba(15,23,42,0.06);
+        }
+        .vm-mini-card strong {
+            display:block;
+            font-size:18px;
+            color:#111827;
+            margin-bottom:8px;
+        }
+        .vm-mini-card span {
+            color:#4b5563;
+            font-size:14px;
+            font-weight:700;
+            line-height:1.35;
+        }
+        .st-key-landing_start button {
+            background:#16a34a !important;
+            color:white !important;
+            border:2px solid #15803d !important;
+            min-height:64px !important;
+            font-size:22px !important;
+            font-weight:900 !important;
+            box-shadow:0 12px 28px rgba(22,163,74,0.24) !important;
+        }
+        .st-key-landing_vocab button {
+            background:#0ea5e9 !important;
+            color:white !important;
+            border:2px solid #0284c7 !important;
+            min-height:64px !important;
+            font-size:18px !important;
+            font-weight:900 !important;
+        }
+        @media (max-width: 760px) {
+            .vm-hero { padding:30px 20px; }
+            .vm-hero h1 { font-size:44px; }
+            .vm-hero p { font-size:17px; }
+            .vm-word-board { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        }
+        </style>
+        <section class="vm-hero">
+            <div style="font-size:14px;font-weight:900;color:#0f766e;text-transform:uppercase;margin-bottom:14px;">Playful English Vocabulary Battle</div>
+            <h1>Vocabulary Master</h1>
+            <p>Belajar vocabulary lewat duel cepat, seru, dan penuh strategi. Pilih kategori, jawab sebelum waktu habis, lalu rebut poin bonus di akhir match.</p>
+            <div class="vm-word-board">
+                <div class="vm-tile" style="background:#fef3c7;">brave</div>
+                <div class="vm-tile" style="background:#bfdbfe;">curious</div>
+                <div class="vm-tile" style="background:#bbf7d0;">achieve</div>
+                <div class="vm-tile" style="background:#fecdd3;">resilient</div>
+                <div class="vm-tile" style="background:#ddd6fe;">honest</div>
+                <div class="vm-tile" style="background:#fed7aa;">challenge</div>
+                <div class="vm-tile" style="background:#cffafe;">discover</div>
+                <div class="vm-tile" style="background:#fbcfe8;">wise</div>
+            </div>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    cta_cols = st.columns([1, 1.1, 1.1, 1])
+    with cta_cols[1]:
+        if st.button("Mulai Battle", key="landing_start", use_container_width=True):
+            open_lobby()
+            st.rerun()
+    with cta_cols[2]:
+        if st.button("Kelola Bank Vocabulary", key="landing_vocab", use_container_width=True):
+            open_lobby()
+            st.rerun()
+
+    feature_cols = st.columns(4)
+    features = [
+        ("Duel 2 Pemain", "Bergantian menjawab vocabulary dengan skor dan streak."),
+        ("Countdown 10 Detik", "Setiap soal terasa cepat, fokus, dan menantang."),
+        ("Bonus Round", "Bagian akhir match punya nilai lebih besar."),
+        ("CSV Fleksibel", "Upload dan kelola bank vocabulary kapan saja."),
+    ]
+    colors = ["#ecfeff", "#f0fdf4", "#fff7ed", "#fdf2f8"]
+    for col, (title, body), color in zip(feature_cols, features, colors):
+        with col:
+            st.markdown(
+                f"""
+                <div class="vm-mini-card" style="background:{color};">
+                    <strong>{html.escape(title)}</strong>
+                    <span>{html.escape(body)}</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+
 def bonus_start_question(total_questions: int) -> int:
     bonus_count = max(1, round(total_questions * BONUS_QUESTION_RATIO))
     return total_questions - bonus_count + 1
@@ -377,6 +520,11 @@ def render_final_result(player_scores: dict[str, int]) -> None:
             """,
             unsafe_allow_html=True,
         )
+
+
+if "battle" not in st.session_state and not st.session_state.get("show_lobby", False):
+    render_landing_page()
+    st.stop()
 
 
 st.title("Vocabulary Master")
