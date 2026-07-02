@@ -276,7 +276,7 @@ def render_answer_cards(options: list[str], is_timeout: bool, round_index: int) 
                 border:2px solid {border} !important;
                 border-radius:8px !important;
                 color:{text_color} !important;
-                font-size:18px !important;
+                font-size:22px !important;
                 font-weight:900 !important;
                 white-space:normal !important;
                 line-height:1.25 !important;
@@ -293,7 +293,7 @@ def render_answer_cards(options: list[str], is_timeout: bool, round_index: int) 
     for index, option in enumerate(options):
         with option_cols[index]:
             if st.button(
-                f"Pilihan {index + 1}\n\n{option}",
+                option,
                 key=f"answer_card_{index}_{round_index}",
                 use_container_width=True,
                 disabled=is_timeout,
