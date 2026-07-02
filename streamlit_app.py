@@ -131,6 +131,95 @@ def submit_answer(answer: str | None) -> None:
     battle["finished"] = battle["current_round"] >= battle["total_rounds"]
 
 
+def render_player_card(player: str, battle: dict, is_active: bool = False) -> None:
+    status = "Giliranmu" if is_active else "Menunggu"
+    background = "#eff6ff" if is_active else "#f9fafb"
+    border = "#2563eb" if is_active else "#e5e7eb"
+    status_color = "#1d4ed8" if is_active else "#6b7280"
+    shadow = "0 0 0 3px rgba(37,99,235,0.12)" if is_active else "none"
+    st.markdown(
+        f"""
+        <div style="background:{background};border:2px solid {border};border-radius:8px;padding:18px;box-shadow:{shadow};">
+            <div style="color:{status_color};font-size:13px;font-weight:800;text-transform:uppercase;">{status}</div>
+            <div style="color:#111827;font-size:26px;font-weight:900;margin-top:4px;">{html.escape(player)}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;">
+                <div>
+                    <div style="color:#6b7280;font-size:12px;font-weight:700;">Skor</div>
+                    <div style="color:#111827;font-size:24px;font-weight:900;">{battle['scores'][player]}</div>
+                </div>
+                <div>
+                    <div style="color:#6b7280;font-size:12px;font-weight:700;">Streak</div>
+                    <div style="color:#111827;font-size:24px;font-weight:900;">{battle['streaks'][player]}</div>
+                </div>
+            </div>
+            <div style="margin-top:12px;color:#374151;font-size:14px;font-weight:700;">
+                +{battle['last_points'][player]} poin terakhir
+            </div>
+            <div style="margin-top:4px;color:#6b7280;font-size:13px;">{html.escape(battle['last_feedback'][player])}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_timer_card(seconds_left: int, is_bonus: bool) -> None:
+    if seconds_left <= 3:
+        color = "#dc2626"
+        background = "#fee2e2"
+        label = "Cepat jawab"
+    elif seconds_left <= 6:
+        color = "#a16207"
+        background = "#fef3c7"
+        label = "Tetap fokus"
+    else:
+        color = "#15803d"
+        background = "#dcfce7"
+        label = "Masih aman"
+
+    phase = "Bonus Round" if is_bonus else "Normal Round"
+    st.markdown(
+        f"""
+        <div style="background:{background};border:1px solid {color};border-radius:8px;padding:18px;text-align:center;">
+            <div style="color:{color};font-size:13px;font-weight:800;text-transform:uppercase;">{html.escape(label)} | {phase}</div>
+            <div style="color:{color};font-size:54px;font-weight:900;line-height:1;">{seconds_left}</div>
+            <div style="color:{color};font-size:14px;font-weight:800;">detik</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def answer_seconds(value: str) -> float:
+    try:
+        return float(str(value).replace(" detik", ""))
+    except ValueError:
+        return 0.0
+
+
+def render_match_summary(answers: pd.DataFrame, player_scores: dict[str, int]) -> None:
+    rows = []
+    for player, score in player_scores.items():
+        player_answers = answers[answers["Pemain"] == player]
+        correct_count = int((player_answers["Benar"] == "Ya").sum())
+        total_count = len(player_answers)
+        accuracy = (correct_count / total_count * 100) if total_count else 0
+        bonus_points = int(player_answers[player_answers["Fase"] == "Bonus"]["Poin"].sum())
+        fastest = player_answers[player_answers["Benar"] == "Ya"]["Waktu"].map(answer_seconds).min()
+        rows.append(
+            {
+                "Pemain": player,
+                "Skor": score,
+                "Benar": correct_count,
+                "Akurasi": f"{accuracy:.0f}%",
+                "Poin Bonus": bonus_points,
+                "Jawaban Tercepat": "-" if pd.isna(fastest) else f"{fastest:.1f} detik",
+            }
+        )
+
+    st.subheader("Match Summary")
+    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+
+
 def render_final_result(player_scores: dict[str, int]) -> None:
     sorted_scores = sorted(player_scores.items(), key=lambda item: item[1], reverse=True)
     if len(sorted_scores) >= 2 and sorted_scores[0][1] == sorted_scores[1][1]:
@@ -225,20 +314,20 @@ if "battle" not in st.session_state:
 else:
     battle = st.session_state.battle
     players = battle["players"]
+    active_player = None
+    if not battle["finished"]:
+        active_player_index = (battle["first_player_index"] + battle["current_round"]) % 2
+        active_player = players[active_player_index]
 
     score_cols = st.columns(2)
     for index, player in enumerate(players):
         with score_cols[index]:
-            st.metric(
-                player,
-                battle["scores"][player],
-                delta=f"+{battle['last_points'][player]} poin terakhir | Streak {battle['streaks'][player]}",
-            )
-            st.caption(battle["last_feedback"][player])
+            render_player_card(player, battle, is_active=player == active_player)
 
     if battle["finished"]:
         render_final_result(battle["scores"])
         answers = pd.DataFrame(battle["answers"])
+        render_match_summary(answers, battle["scores"])
 
         st.subheader("Review Battle")
         st.dataframe(answers, use_container_width=True, hide_index=True)
@@ -261,8 +350,6 @@ else:
     else:
         st_autorefresh(interval=1000, key="battle_countdown")
         question = battle["questions"][battle["current_round"]]
-        active_player_index = (battle["first_player_index"] + battle["current_round"]) % 2
-        active_player = players[active_player_index]
         progress = (battle["current_round"] + 1) / battle["total_rounds"]
         seconds_used = time.time() - battle["round_started_at"]
         seconds_left = max(0, TIME_LIMIT_SECONDS - int(seconds_used))
@@ -272,8 +359,9 @@ else:
         with st.container(border=True):
             phase = "Bonus Round" if question["is_bonus"] else "Normal Round"
             st.caption(f"Gilirannya {active_player} | {phase}")
-            timer_cols = st.columns(3)
-            timer_cols[0].metric("Countdown", f"{seconds_left}")
+            timer_cols = st.columns([1.2, 1, 1])
+            with timer_cols[0]:
+                render_timer_card(seconds_left, question["is_bonus"])
             timer_cols[1].metric("Nilai dasar", 200 if question["is_bonus"] else 100)
             timer_cols[2].metric("Soal bonus mulai", f"{BONUS_START_QUESTION}/{TOTAL_QUESTIONS}")
             if is_timeout:
