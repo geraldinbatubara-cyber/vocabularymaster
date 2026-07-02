@@ -87,6 +87,7 @@ def initialize_battle(player_1: str, player_2: str, level: str, category: str) -
         "last_feedback": {player_1: "Belum menjawab", player_2: "Belum menjawab"},
         "answers": [],
         "round_started_at": time.time(),
+        "round_ready": False,
         "finished": False,
     }
 
@@ -127,8 +128,13 @@ def submit_answer(answer: str | None) -> None:
     st.toast(result.feedback)
 
     battle["current_round"] += 1
-    battle["round_started_at"] = time.time()
     battle["finished"] = battle["current_round"] >= battle["total_rounds"]
+    battle["round_ready"] = False
+
+
+def start_round() -> None:
+    st.session_state.battle["round_started_at"] = time.time()
+    st.session_state.battle["round_ready"] = True
 
 
 def render_player_card(player: str, battle: dict, is_active: bool = False) -> None:
@@ -192,27 +198,80 @@ def render_timer_card(seconds_left: int, is_bonus: bool) -> None:
     )
 
 
-def render_answer_cards(options: list[str], is_timeout: bool) -> None:
+def render_start_gate(active_player: str, question: dict) -> None:
+    phase = "Bonus Round" if question["is_bonus"] else "Normal Round"
+    st.markdown(
+        f"""
+        <div style="text-align:center;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:28px;margin:14px 0;">
+            <div style="color:#4b5563;font-size:13px;font-weight:900;text-transform:uppercase;">{phase}</div>
+            <div style="color:#111827;font-size:28px;font-weight:900;margin-top:6px;">Giliran {html.escape(active_player)}</div>
+            <div style="color:#6b7280;font-size:15px;font-weight:700;margin-top:8px;">Tekan START untuk mulai countdown 10 detik.</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        """
+        <style>
+        .st-key-start_round button {
+            background:#16a34a !important;
+            border:2px solid #15803d !important;
+            color:white !important;
+            font-size:24px !important;
+            font-weight:900 !important;
+            padding:1rem 2rem !important;
+            min-height:70px !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    left, center, right = st.columns([1, 1.2, 1])
+    with center:
+        if st.button("START", key="start_round", use_container_width=True):
+            start_round()
+            st.rerun()
+
+
+def render_answer_cards(options: list[str], is_timeout: bool, round_index: int) -> None:
     colors = [
         ("#eff6ff", "#2563eb", "#1e3a8a"),
         ("#f0fdf4", "#16a34a", "#14532d"),
         ("#fff7ed", "#ea580c", "#7c2d12"),
         ("#fdf2f8", "#db2777", "#831843"),
     ]
+    css_rules = []
+    for index, (background, border, text_color) in enumerate(colors):
+        css_rules.append(
+            f"""
+            .st-key-answer_card_{index}_{round_index} button {{
+                min-height:148px !important;
+                background:{background} !important;
+                border:2px solid {border} !important;
+                border-radius:8px !important;
+                color:{text_color} !important;
+                font-size:20px !important;
+                font-weight:900 !important;
+                white-space:normal !important;
+                line-height:1.25 !important;
+                padding:16px !important;
+            }}
+            .st-key-answer_card_{index}_{round_index} button:hover {{
+                box-shadow:0 0 0 3px {border}33 !important;
+                transform:translateY(-1px);
+            }}
+            """
+        )
+    st.markdown(f"<style>{''.join(css_rules)}</style>", unsafe_allow_html=True)
     option_cols = st.columns(4)
     for index, option in enumerate(options):
-        background, border, text_color = colors[index % len(colors)]
         with option_cols[index]:
-            st.markdown(
-                f"""
-                <div style="min-height:138px;background:{background};border:2px solid {border};border-radius:8px;padding:16px;text-align:center;display:flex;flex-direction:column;justify-content:center;">
-                    <div style="color:{border};font-size:12px;font-weight:900;text-transform:uppercase;">Pilihan {index + 1}</div>
-                    <div style="color:{text_color};font-size:21px;font-weight:900;line-height:1.2;margin-top:8px;word-break:break-word;">{html.escape(option)}</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            if st.button("Pilih", key=f"answer_{index}_{option}", use_container_width=True, disabled=is_timeout):
+            if st.button(
+                f"Pilihan {index + 1}\n\n{option}",
+                key=f"answer_card_{index}_{round_index}",
+                use_container_width=True,
+                disabled=is_timeout,
+            ):
                 submit_answer(option)
                 st.rerun()
 
@@ -376,17 +435,26 @@ else:
             reset_battle()
             st.rerun()
     else:
-        st_autorefresh(interval=1000, key="battle_countdown")
         question = battle["questions"][battle["current_round"]]
         progress = (battle["current_round"] + 1) / battle["total_rounds"]
-        seconds_used = time.time() - battle["round_started_at"]
-        seconds_left = max(0, TIME_LIMIT_SECONDS - int(seconds_used))
-        is_timeout = seconds_left == 0
 
         st.progress(progress, text=f"Soal {question['round']} dari {battle['total_rounds']}")
         with st.container(border=True):
             phase = "Bonus Round" if question["is_bonus"] else "Normal Round"
             st.caption(f"Gilirannya {active_player} | {phase}")
+            if not battle.get("round_ready", False):
+                render_start_gate(active_player, question)
+                center_reset = st.columns([1.2, 1, 1.2])[1]
+                with center_reset:
+                    if st.button("Reset", use_container_width=True):
+                        reset_battle()
+                        st.rerun()
+                st.stop()
+
+            st_autorefresh(interval=1000, key="battle_countdown")
+            seconds_used = time.time() - battle["round_started_at"]
+            seconds_left = max(0, TIME_LIMIT_SECONDS - int(seconds_used))
+            is_timeout = seconds_left == 0
             render_timer_card(seconds_left, question["is_bonus"])
             info_cols = st.columns(2)
             info_cols[0].metric("Nilai dasar", 200 if question["is_bonus"] else 100)
@@ -396,15 +464,20 @@ else:
             st.subheader(question["type"])
             st.write(question["instruction"])
             st.markdown(f"### {question['prompt']}")
-            render_answer_cards(question["options"], is_timeout)
+            render_answer_cards(question["options"], is_timeout, battle["current_round"])
 
-            col_submit, col_reset = st.columns([3, 1])
-            with col_submit:
-                if is_timeout:
+            if is_timeout:
+                left, center, right = st.columns([1.15, 1, 1.15])
+                with center:
                     if st.button("Waktu Habis - Lanjut", type="primary", use_container_width=True):
                         submit_answer(None)
                         st.rerun()
-            with col_reset:
-                if st.button("Reset", use_container_width=True):
-                    reset_battle()
-                    st.rerun()
+                    if st.button("Reset", use_container_width=True):
+                        reset_battle()
+                        st.rerun()
+            else:
+                left, center, right = st.columns([1.15, 1, 1.15])
+                with center:
+                    if st.button("Reset", use_container_width=True):
+                        reset_battle()
+                        st.rerun()
