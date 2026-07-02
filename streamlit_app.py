@@ -159,23 +159,23 @@ def render_player_card(player: str, battle: dict, is_active: bool = False) -> No
     shadow = "0 0 0 3px rgba(37,99,235,0.12)" if is_active else "none"
     st.markdown(
         f"""
-        <div style="background:{background};border:2px solid {border};border-radius:8px;padding:18px;box-shadow:{shadow};">
-            <div style="color:{status_color};font-size:13px;font-weight:800;text-transform:uppercase;">{status}</div>
-            <div style="color:#111827;font-size:26px;font-weight:900;margin-top:4px;">{html.escape(player)}</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;">
+        <div style="background:{background};border:2px solid {border};border-radius:8px;padding:12px 14px;box-shadow:{shadow};">
+            <div style="color:{status_color};font-size:12px;font-weight:800;text-transform:uppercase;">{status}</div>
+            <div style="color:#111827;font-size:22px;font-weight:900;margin-top:2px;">{html.escape(player)}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
                 <div>
-                    <div style="color:#6b7280;font-size:12px;font-weight:700;">Skor</div>
-                    <div style="color:#111827;font-size:24px;font-weight:900;">{battle['scores'][player]}</div>
+                    <div style="color:#6b7280;font-size:11px;font-weight:700;">Skor</div>
+                    <div style="color:#111827;font-size:22px;font-weight:900;line-height:1;">{battle['scores'][player]}</div>
                 </div>
                 <div>
-                    <div style="color:#6b7280;font-size:12px;font-weight:700;">Streak</div>
-                    <div style="color:#111827;font-size:24px;font-weight:900;">{battle['streaks'][player]}</div>
+                    <div style="color:#6b7280;font-size:11px;font-weight:700;">Streak</div>
+                    <div style="color:#111827;font-size:22px;font-weight:900;line-height:1;">{battle['streaks'][player]}</div>
                 </div>
             </div>
-            <div style="margin-top:12px;color:#374151;font-size:14px;font-weight:700;">
+            <div style="margin-top:8px;color:#374151;font-size:13px;font-weight:700;">
                 +{battle['last_points'][player]} poin terakhir
             </div>
-            <div style="margin-top:4px;color:#6b7280;font-size:13px;">{html.escape(battle['last_feedback'][player])}</div>
+            <div style="margin-top:2px;color:#6b7280;font-size:12px;">{html.escape(battle['last_feedback'][player])}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -199,13 +199,31 @@ def render_timer_card(seconds_left: int, is_bonus: bool) -> None:
     phase = "Bonus Round" if is_bonus else "Normal Round"
     st.markdown(
         f"""
-        <div style="display:flex;justify-content:center;margin:8px 0 18px;">
-            <div style="width:min(420px,100%);background:{background};border:2px solid {color};border-radius:8px;padding:26px;text-align:center;box-shadow:0 16px 34px rgba(17,24,39,0.10);">
-                <div style="color:{color};font-size:14px;font-weight:900;text-transform:uppercase;">Countdown</div>
-                <div style="color:{color};font-size:104px;font-weight:900;line-height:0.95;">{seconds_left}</div>
-                <div style="color:{color};font-size:16px;font-weight:900;">detik</div>
-                <div style="color:{color};font-size:13px;font-weight:800;margin-top:8px;">{html.escape(label)} | {phase}</div>
+        <div style="display:flex;justify-content:center;margin:0;">
+            <div style="width:100%;background:{background};border:2px solid {color};border-radius:8px;padding:14px 18px;text-align:center;box-shadow:0 12px 26px rgba(17,24,39,0.10);">
+                <div style="color:{color};font-size:12px;font-weight:900;text-transform:uppercase;">Countdown</div>
+                <div style="color:{color};font-size:82px;font-weight:900;line-height:0.9;">{seconds_left}</div>
+                <div style="color:{color};font-size:13px;font-weight:900;">detik</div>
+                <div style="color:{color};font-size:12px;font-weight:800;margin-top:4px;">{html.escape(label)} | {phase}</div>
             </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_side_info(label: str, value: str | int, tone: str) -> None:
+    palettes = {
+        "base": ("#f0f9ff", "#0284c7", "#0c4a6e"),
+        "normal": ("#f3f4f6", "#6b7280", "#111827"),
+        "bonus": ("#fffbeb", "#d97706", "#78350f"),
+    }
+    background, border, text_color = palettes[tone]
+    st.markdown(
+        f"""
+        <div style="height:100%;min-height:148px;background:{background};border:2px solid {border};border-radius:8px;padding:18px 14px;text-align:center;display:flex;flex-direction:column;justify-content:center;">
+            <div style="color:{border};font-size:12px;font-weight:900;text-transform:uppercase;">{html.escape(label)}</div>
+            <div style="color:{text_color};font-size:34px;font-weight:900;line-height:1;margin-top:10px;">{html.escape(str(value))}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -259,16 +277,16 @@ def render_answer_cards(options: list[str], is_timeout: bool, round_index: int) 
         css_rules.append(
             f"""
             .st-key-answer_card_{index}_{round_index} button {{
-                min-height:148px !important;
+                min-height:108px !important;
                 background:{background} !important;
                 border:2px solid {border} !important;
                 border-radius:8px !important;
                 color:{text_color} !important;
-                font-size:20px !important;
+                font-size:18px !important;
                 font-weight:900 !important;
                 white-space:normal !important;
                 line-height:1.25 !important;
-                padding:16px !important;
+                padding:12px !important;
             }}
             .st-key-answer_card_{index}_{round_index} button:hover {{
                 box-shadow:0 0 0 3px {border}33 !important;
@@ -488,15 +506,25 @@ else:
             seconds_used = time.time() - battle["round_started_at"]
             seconds_left = max(0, TIME_LIMIT_SECONDS - int(seconds_used))
             is_timeout = seconds_left == 0
-            render_timer_card(seconds_left, question["is_bonus"])
-            info_cols = st.columns(2)
-            info_cols[0].metric("Nilai dasar", 200 if question["is_bonus"] else 100)
-            info_cols[1].metric("Soal bonus mulai", f"{battle['bonus_start_question']}/{battle['total_rounds']}")
+            spotlight_cols = st.columns([0.9, 1.35, 0.9])
+            with spotlight_cols[0]:
+                render_side_info("Nilai dasar", 200 if question["is_bonus"] else 100, "base")
+            with spotlight_cols[1]:
+                render_timer_card(seconds_left, question["is_bonus"])
+            with spotlight_cols[2]:
+                render_side_info("Jenis soal", "Bonus" if question["is_bonus"] else "Biasa", "bonus" if question["is_bonus"] else "normal")
             if is_timeout:
                 st.error("Waktu Habis")
-            st.subheader(question["type"])
-            st.write(question["instruction"])
-            st.markdown(f"### {question['prompt']}")
+            st.markdown(
+                f"""
+                <div style="margin:8px 0 10px;">
+                    <div style="color:#4b5563;font-size:14px;font-weight:900;text-transform:uppercase;">{html.escape(question['type'])}</div>
+                    <div style="color:#6b7280;font-size:14px;font-weight:700;">{html.escape(question['instruction'])}</div>
+                    <div style="color:#111827;font-size:26px;font-weight:900;line-height:1.2;margin-top:6px;">{html.escape(question['prompt'])}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
             render_answer_cards(question["options"], is_timeout, battle["current_round"])
 
             if is_timeout:
